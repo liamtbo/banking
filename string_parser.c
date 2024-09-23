@@ -51,9 +51,6 @@ command_line str_filler (char* buf, const char* delim)
 	*	#6. return the variable.
 	*/
     command_line com_line;
-
-
-    // buf = strtok_r(buf, "\n", &tmp);
     int k = 0;
     while (buf[k] != '\0') {
         if (buf[k] == '\n') {
@@ -63,7 +60,6 @@ command_line str_filler (char* buf, const char* delim)
     }
 
     // parsing command
-    // int num_token = count_token(buf, delim);
     com_line.num_token = count_token(buf, delim);
     com_line.command_list = (char**)malloc(sizeof(char*) * (com_line.num_token + 1)); // +1 is for NULL
     com_line.command_list[com_line.num_token] = NULL;

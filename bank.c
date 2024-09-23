@@ -42,7 +42,6 @@ int main(int argc, char *argv[]) {
     FILE *file = fopen(argv[2], "r");
     if (file == NULL) {
         perror("couldn't open file");
-        printf("we got here\n");
         printf("file:%s\n", argv[2]);
         return EXIT_FAILURE;
     }
@@ -55,14 +54,14 @@ int main(int argc, char *argv[]) {
     free(line);
     line = NULL;
 
-    // create array of account class objects
+    // create and initialize array of account class objects
     populate_acc(file);
 
-    // number of jobs per worker
+    // calculate the number of jobs per worker
     JOBS_PER_WORKER = num_jobs_per_worker(file, line, length);
 
     // create array of num_of_workers x JOBS_PER_WORKER x 128
-    // to hold 
+    // 128 is for the lines
     char ***workers_ops;
     assigning_workers_ops(file, &workers_ops, JOBS_PER_WORKER);
 
@@ -86,7 +85,7 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
     }
-    
+    // wait until worker threads have completed transactions
     pthread_barrier_wait(&barrier12);
 
     // main thread waiting for worker threads to be completed
@@ -347,14 +346,8 @@ void complete_ops(command_line *line_parsed, int acc_src, int acc_dst) {
         pthread_mutex_lock(&transaction_count);
         NUM_OF_TRANSACTION += 1;
         if (NUM_OF_TRANSACTION % 5000 == 0) {
-            // printf("here: %d\n", NUM_OF_TRANSACTION);
-            // printf("num trans: %d\n", NUM_OF_TRANSACTION);
-            // printf("worker locking bank\n");
             pthread_mutex_lock(&bank_lock); // 3
-            // printf("worker got bank lock\n");
-            // fprintf(stderr, "here\n");
             pthread_cond_signal(&bank_cond); // 4
-            // printf("worker cond_waiting\n");
             pthread_cond_wait(&worker_cond, &bank_lock); // 5 , 9
             pthread_mutex_unlock(&bank_lock);
         }
@@ -405,9 +398,8 @@ void *update_balance() {
         n = snprintf(account_files[i], 30, "output/act_%d.txt", i);
         n = snprintf(top_of_file, sizeof(top_of_file), "account %d:\n", i);
         file = fopen(account_files[i], "w");
-        fprintf(file, top_of_file);
+        fprintf(file, "%s", top_of_file);
         fclose(file);
-        // printf("%s\n", account_files[i]);
     }
 
     pthread_mutex_lock(&bank_lock); // 1
@@ -421,17 +413,12 @@ void *update_balance() {
         for (int i = 0; i < NUM_OF_ACC; i++) {
             ACC[i]->balance += ACC[i]->reward_rate * ACC[i]->transaction_tracker;
             ACC[i]->transaction_tracker = 0;
-
-            // printf("%.2f\n", ACC[i]->balance);
-
             file = fopen(account_files[i], "a");
             fprintf(file, "Current Balance:\t%.2f\n", ACC[i]->balance);
             fclose(file);
         }
         NUM_OF_UPDATES += 1;
         pthread_cond_signal(&worker_cond); // 7
-        // pthread_mutex_unlock(&bank_lock); // 8
-        // printf("%d\n", WORKERS_FINISHED);
         if (WORKERS_FINISHED) {
             break;
         }
