@@ -5,7 +5,7 @@
 
 This banking project is a multi-threaded system that simulates banking operations such as deposits, withdrawals, and transfers between multiple accounts. The project utilizes POSIX threads (pthreads) for concurrency, allowing multiple worker threads to process transactions in parallel and maintains thread safety through the use of mutexes and barriers.
 
-The program reads account and transaction information from an input file, processes the transactions concurrently across multiple worker threads, and applies updates to account balances. A separate bank thread calculates rewards for account holders at the end of transaction processing.
+The program reads account and transaction information from an input file, processes the transactions concurrently across multiple worker threads, and applies updates to account balances. A separate bank thread calculates rewards for account holders at each 5000 transactions completed mark.
 ## Features
 
 - Multi-threaded design using pthreads.
